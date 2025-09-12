@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import TaxonomicHierarchy, { TaxonomicNode } from '@/components/TaxonomicHierarchy'
 import ProvenanceChain, { ProvenanceEntry } from '@/components/ProvenanceChain'
 import { GitBranch, Users, Activity, Database, Plus, Eye } from 'lucide-react'
+import { Link } from 'wouter'
 
 // Mock data for demonstration
 const mockTaxonomies: TaxonomicNode[] = [
@@ -105,9 +106,11 @@ export default function Dashboard() {
           </p>
         </div>
         <div className="flex gap-2">
-          <Button data-testid="button-create-taxonomy">
-            <Plus className="w-4 h-4 mr-2" />
-            Create Taxonomy
+          <Button asChild data-testid="button-create-taxonomy">
+            <Link href="/taxonomies/create">
+              <Plus className="w-4 h-4 mr-2" />
+              Create Taxonomy
+            </Link>
           </Button>
           <Button variant="outline" data-testid="button-import-data">
             Import Data

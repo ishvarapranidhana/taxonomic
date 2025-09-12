@@ -12,6 +12,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import Dashboard from "@/pages/Dashboard";
 import SearchPage from "@/pages/SearchPage";
 import TaxonomiesPage from "@/pages/TaxonomiesPage";
+import CreateTaxonomyPage from "@/pages/CreateTaxonomyPage";
 import DocumentationPage from "@/pages/DocumentationPage";
 import AdminBNFValidator from "@/pages/AdminBNFValidator";
 import NotFound from "@/pages/NotFound";
@@ -22,6 +23,7 @@ function Router() {
       <Route path="/" component={Dashboard} />
       <Route path="/search" component={SearchPage} />
       <Route path="/taxonomies" component={TaxonomiesPage} />
+      <Route path="/taxonomies/create" component={CreateTaxonomyPage} />
       <Route path="/docs" component={DocumentationPage} />
       <Route path="/admin/validator" component={AdminBNFValidator} />
       {/* Fallback to 404 */}

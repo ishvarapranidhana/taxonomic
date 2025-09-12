@@ -5,6 +5,7 @@ import { Card } from '@/components/ui/card'
 import { Plus, Filter, Grid, List } from 'lucide-react'
 import TaxonomicHierarchy, { TaxonomicNode } from '@/components/TaxonomicHierarchy'
 import ProvenanceChain, { ProvenanceEntry } from '@/components/ProvenanceChain'
+import { Link } from 'wouter'
 
 // Extended mock data
 const mockTaxonomies: TaxonomicNode[] = [
@@ -130,9 +131,11 @@ export default function TaxonomiesPage() {
             Explore and manage hierarchical taxonomic structures
           </p>
         </div>
-        <Button data-testid="button-create-taxonomy">
-          <Plus className="w-4 h-4 mr-2" />
-          Create Taxonomy
+        <Button asChild data-testid="button-create-taxonomy">
+          <Link href="/taxonomies/create">
+            <Plus className="w-4 h-4 mr-2" />
+            Create Taxonomy
+          </Link>
         </Button>
       </div>
 

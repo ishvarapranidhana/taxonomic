@@ -44,13 +44,13 @@ export const taxonomies = pgTable("taxonomies", {
   
   // Sharing and permissions
   sharingType: text("sharing_type").notNull().default(SharingType.PRIVATE),
-  ownerId: varchar("owner_id").notNull().references(() => users.id),
+  ownerId: varchar("owner_id").notNull(),
   sharedUsers: text("shared_users").array().default([]),
   sharedRealms: text("shared_realms").array().default([]),
   isPublic: boolean("is_public").default(false),
   
   // Hierarchical data
-  parentId: varchar("parent_id").references(() => taxonomies.id),
+  parentId: varchar("parent_id"),
   
   // System fields
   createdAt: timestamp("created_at").defaultNow(),

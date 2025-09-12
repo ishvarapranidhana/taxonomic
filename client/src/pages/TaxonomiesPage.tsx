@@ -6,6 +6,8 @@ import { Plus, Filter, Grid, List } from 'lucide-react'
 import TaxonomicHierarchy, { TaxonomicNode } from '@/components/TaxonomicHierarchy'
 import ProvenanceChain, { ProvenanceEntry } from '@/components/ProvenanceChain'
 import { Link } from 'wouter'
+import { useQuery } from '@tanstack/react-query'
+import { useToast } from '@/hooks/use-toast'
 
 // Extended mock data
 const mockTaxonomies: TaxonomicNode[] = [
@@ -108,17 +110,41 @@ export default function TaxonomiesPage() {
   const [selectedTaxonomy, setSelectedTaxonomy] = useState<TaxonomicNode | null>(null)
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('list')
   const [searchQuery, setSearchQuery] = useState('')
+  const { toast } = useToast()
+
+  // Fetch taxonomies from API
+  const { data: taxonomies = [], isLoading, error } = useQuery<TaxonomicNode[]>({
+    queryKey: ['/api/taxonomies'],
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  })
+
+  // Fallback to mock data if API fails or is empty
+  const displayTaxonomies: TaxonomicNode[] = taxonomies.length > 0 ? taxonomies : mockTaxonomies
 
   const handleTaxonomySelect = (node: TaxonomicNode) => {
     setSelectedTaxonomy(node)
     console.log('Selected taxonomy:', node)
   }
 
-  const filteredTaxonomies = mockTaxonomies.filter(taxonomy =>
+  const handleTaxonomyClone = (node: TaxonomicNode) => {
+    toast({ 
+      title: 'Cloning taxonomy...', 
+      description: `Creating a copy of "${node.projectId}"` 
+    })
+  }
+
+  const handleTaxonomyShare = (node: TaxonomicNode) => {
+    toast({ 
+      title: 'Opening sharing settings', 
+      description: `Configure sharing for "${node.projectId}"` 
+    })
+  }
+
+  const filteredTaxonomies = displayTaxonomies.filter((taxonomy) =>
     !searchQuery ||
-    taxonomy.projectId.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    taxonomy.domainSuffix.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    taxonomy.aspectTags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
+    taxonomy.projectId?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    taxonomy.domainSuffix?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    taxonomy.aspectTags?.some((tag) => tag.toLowerCase().includes(searchQuery.toLowerCase()))
   )
 
   return (
@@ -181,10 +207,23 @@ export default function TaxonomiesPage() {
         {/* Taxonomies List */}
         <div className="lg:col-span-2">
           <Card className="p-6">
+            {isLoading ? (
+              <div className="text-center py-8">
+                <div className="text-muted-foreground">Loading taxonomies...</div>
+              </div>
+            ) : error ? (
+              <div className="text-center py-8">
+                <div className="text-destructive mb-2">Failed to load taxonomies</div>
+                <div className="text-sm text-muted-foreground">Using mock data instead</div>
+              </div>
+            ) : null}
             <TaxonomicHierarchy
               nodes={filteredTaxonomies}
               title="Taxonomic Hierarchies"
               onNodeSelect={handleTaxonomySelect}
+              onNodeClone={handleTaxonomyClone}
+              onNodeShare={handleTaxonomyShare}
+              enableActions={true}
             />
           </Card>
         </div>

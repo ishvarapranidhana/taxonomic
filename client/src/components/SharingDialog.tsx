@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -51,7 +51,7 @@ export default function SharingDialog({ node, isOpen, onClose, onSave }: Sharing
   const { toast } = useToast()
 
   // Reset form when node changes
-  useState(() => {
+  useEffect(() => {
     if (node) {
       setSharingType(node.sharingType as SharingSettings['sharingType'] || 'private')
       setIsPublic(node.isPublic || false)
@@ -59,7 +59,7 @@ export default function SharingDialog({ node, isOpen, onClose, onSave }: Sharing
       setSharedRealms(node.sharedRealms || [])
       setDescription('')
     }
-  })
+  }, [node])
 
   const handleAddUser = () => {
     if (newUser.trim() && !sharedUsers.includes(newUser.trim())) {

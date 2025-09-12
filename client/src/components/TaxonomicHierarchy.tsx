@@ -11,6 +11,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import SharingDialog, { type SharingSettings } from './SharingDialog'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { apiRequest } from '@/lib/queryClient'
 
 export interface TaxonomicNode {
   id: string
@@ -49,7 +52,9 @@ export default function TaxonomicHierarchy({
   enableActions = true 
 }: TaxonomicHierarchyProps) {
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set())
+  const [sharingNode, setSharingNode] = useState<TaxonomicNode | null>(null)
   const { toast } = useToast()
+  const queryClient = useQueryClient()
 
   const toggleNode = (nodeId: string) => {
     const newExpanded = new Set(expandedNodes)
@@ -67,15 +72,70 @@ export default function TaxonomicHierarchy({
     toast({ title: 'Copied to clipboard', description: 'Taxonomic ID copied successfully' })
   }
 
+  // Clone mutation
+  const cloneMutation = useMutation({
+    mutationFn: async (nodeId: string) => {
+      return apiRequest(`/api/taxonomies/${nodeId}/clone`, {
+        method: 'POST',
+        headers: {
+          'x-user-id': 'current-user' // TODO: Use actual user ID from auth context
+        },
+        body: JSON.stringify({}) // newOwnerId will default to current user
+      })
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/taxonomies'] })
+      toast({ title: 'Taxonomy cloned', description: 'Successfully created a copy' })
+    },
+    onError: (error: any) => {
+      toast({ 
+        title: 'Clone failed', 
+        description: error.message || 'Failed to clone taxonomy',
+        variant: 'destructive'
+      })
+    }
+  })
+
+  // Update taxonomy mutation for sharing
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, updates }: { id: string; updates: Partial<TaxonomicNode> }) => {
+      return apiRequest(`/api/taxonomies/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(updates)
+      })
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/taxonomies'] })
+    },
+    onError: (error: any) => {
+      toast({ 
+        title: 'Update failed', 
+        description: error.message || 'Failed to update sharing settings',
+        variant: 'destructive'
+      })
+    }
+  })
+
   const handleClone = (node: TaxonomicNode, e: React.MouseEvent) => {
     e.stopPropagation()
-    onNodeClone?.(node)
-    toast({ title: 'Taxonomy cloned', description: `Created a copy of "${node.projectId}"` })
+    cloneMutation.mutate(node.id)
   }
 
   const handleShare = (node: TaxonomicNode, e: React.MouseEvent) => {
     e.stopPropagation()
-    onNodeShare?.(node)
+    setSharingNode(node)
+  }
+
+  const handleSaveSharing = (node: TaxonomicNode, settings: SharingSettings) => {
+    updateMutation.mutate({
+      id: node.id,
+      updates: {
+        sharingType: settings.sharingType,
+        isPublic: settings.isPublic,
+        sharedUsers: settings.sharedUsers,
+        sharedRealms: settings.sharedRealms
+      }
+    })
   }
 
   const getSharingBadge = (node: TaxonomicNode) => {
@@ -196,6 +256,13 @@ export default function TaxonomicHierarchy({
       <div className="space-y-2">
         {nodes.map(node => renderNode(node))}
       </div>
+      
+      <SharingDialog
+        node={sharingNode}
+        isOpen={!!sharingNode}
+        onClose={() => setSharingNode(null)}
+        onSave={handleSaveSharing}
+      />
     </div>
   )
 }
